@@ -1,3 +1,4 @@
+Sys.setlocale("LC_ALL", "en_US.UTF-8") 
 library(mgcv)
 library(itsadug)
 data<-read.csv('/Users/pplsuser/FAVE/FAVE-align-thesis/all_data_exclusions_social.csv')
@@ -9,7 +10,7 @@ data[,"LogDur"]<-log(data$Duration)
 data<-data[!data$frame>20,]
 t <- poly((unique(data$YOB)), 3)
 data[,paste("ot", 1:3, sep="")] <- t[data$frame, 1:3]
-data$Edu_bin<-ifelse(data$Part_edu==1|data$Part_edu==2,'LW',ifelse(data$Part_edu==3|data$Part_edu==4,"W","M"))data<-data[!is.na(data$variable),]
+data$Edu_bin<-ifelse(data$Education==1|data$Education==2,'LW',ifelse(data$Education==3|data$Education==4,"W","M"))
 ow<-data[data$Vowel=='OW1',]
 uw<-data[data$Vowel=='UW1',]
 ow$JF<-unlist(mapply('jf_codes_new',vowel=ow$Vowel,pre=ow$Pre_place,fol=ow$Fol_manner,preseg=ow$PrePhon,folseg=ow$FolSeg))
@@ -302,6 +303,7 @@ data[,c("Fol_voice","Fol_place","Fol_manner")]<-t(sapply(data$FolSeg,'placemanne
 class(data$Duration)
 data[,"LogDur"]<-log(data$Duration)
 data<-data[!data$frame>20&data$Style=='Wordlist',]
+data$Edu_bin<-ifelse(data$Education==1|data$Education==2,'LW',ifelse(data$Education==3|data$Education==4,"W","M"))
 t <- poly((unique(data$YOB)), 3)
 data[,paste("ot", 1:3, sep="")] <- t[data$frame, 1:3]
 ow<-data[data$Vowel=='OW1',]
@@ -518,15 +520,16 @@ ggplot(newdata,aes(x=frame,y=F2,fill=Mob))+geom_ribbon(aes(ymax=F2+(.5*F2.se),ym
 
 
 #Models for CLS
-
-
+ow$Edu_bin<-factor(ow$Edu_bin)
 ow1<- gam(F2.norm ~ JF+s(frame,by=JF),data=ow,method='ML')
 ow1.5<-gam(F2.norm ~ JF+YOB+s(frame,by=JF),data=ow,method='ML')
-ow2<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),data=ow,method='ML')
+ow2<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),data=ow,method='ML',verbose=T)
 ow3<- gam(F2.norm ~ JF+YOB+Gender+te(frame,YOB,by=JF)+te(frame,YOB,by=Gender),data=ow,method='ML')
-ow4<- gam(F2.norm ~ JF+YOB+Gender+Edu_bin+te(frame,YOB,by=JF)+te(frame,YOB,by=Edu_bin)+te(frame,YOB,by=Gender),data=ow,method='ML')
+ow4<- gam(F2.norm ~ JF+YOB+Edu_bin+te(frame,YOB,by=JF)+te(frame,by=Edu_bin),data=ow,method='ML',verbose=T)
+save(ow4,file='ow4_cls.R')
 
-newdata<-expand.grid(frame=seq(1,20,by=.1),YOB=1935:2000,JF=levels(ow$JF))
+
+newdata<-expand.grid(frame=seq(1,20,by=.1),YOB=1935:2000,JF=levels(ow$JF),Edu_bin=levels(Edu_bin))
 newdata$F2<-predict(ow2,newdata)
 newdata$F2.se<-predict(ow2,newdata,se.fit=T)$se.fit
 newdata<-newdata[newdata$JF!='owF'&newdata$JF!='owL',]
@@ -535,9 +538,12 @@ newdata$JF<-factor(newdata$JF,levels=levels(newdata$JF)[c(2,1,3,4)])
 names(newdata)[3]<-'Environment'
 ggplot(newdata[newdata$frame==15,],aes(x=YOB,y=F2,linetype=Environment))+geom_ribbon(aes(ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se),color='black',alpha=.001)+theme(panel.border=element_rect(size=1.5,color='black'))+geom_line(aes(linetype=Environment))+theme_bw()+ylab('F2/S(F2)')+xlab('Year')+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+ggtitle('/o/')+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owphoneticconditioning.pdf',width=3,height=2)
 
+uw$Edu_bin<-factor(uw$Edu_bin)
 uw1<- gam(F2.norm ~ JF+s(frame,by=JF,k=4),data=uw,method='ML')
 uw1.5<-gam(F2.norm ~ JF+YOB+s(frame,by=JF,k=4),data=uw,method='ML')
 uw2<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),data=uw,method='ML')
+uw3<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),data=uw,method='ML')
+uw4<- gam(F2.norm ~ JF+YOB+Edu_bin+te(frame,YOB,by=JF,k=4)+te(frame,YOB,by=Edu_bin,k=4),data=uw,method='ML',verbose=T)
 compareML(uw2,uw1.5)
 
 uwnewdata<-expand.grid(frame=seq(1,20,by=.1),YOB=1935:2000,JF=levels(uw$JF))
@@ -550,9 +556,125 @@ ggplot(uwnewdata[uwnewdata$frame==15,],aes(x=YOB,y=F2,linetype=Environment))+geo
 #Main effects
 ggplot(ow[ow$frame==15&ow$F2.norm<1.3&ow$F2.norm>0.6,])+stat_summary(aes(group=Pseudo,x=YOB,y=F2.norm),geom='point',size=2,shape=1,alpha=0.5)+geom_ribbon(data=newdata[newdata$frame==15&newdata$Environment=='owN',],aes(x=YOB,ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se),color='black',alpha=0)+geom_line(data=newdata[newdata$frame==15&newdata$Environment=='owN',],aes(x=YOB,y=F2))+theme_bw()+xlab('Year')+ylab('F2/S(F2)')+ggtitle('/o/')+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owchange.pdf',width=2.5,height=2.5)
 ggplot(uw[uw$frame==15&uw$F2.norm<1.7,])+stat_summary(aes(group=Pseudo,x=YOB,y=F2.norm),geom='point',size=2,shape=1,alpha=0.5)+geom_ribbon(data=uwnewdata[uwnewdata$frame==15&uwnewdata$Environment=='uw',],aes(x=YOB,ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se),color='black',alpha=0)+geom_line(data=uwnewdata[uwnewdata$frame==15&uwnewdata$Environment=='uw',],aes(x=YOB,y=F2))+theme_bw()+xlab('Year')+ylab('F2/S(F2)')+ggtitle('/u/')+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/uwchange.pdf',width=2.5,height=2.5)
+#Rates of change and interspeaker correlation
+
+ow2<- gam(F2.norm ~ YOB+te(frame,YOB,k=4),data=ow[ow$JF!='owL',],method='ML')
+uw2<- gam(F2.norm ~ YOB+te(frame,YOB,k=4),data=uw[uw$JF!='uwL'&uw$JF!='Juw',],method='ML')
+
+
+newdata<-expand.grid(frame=15,YOB=1935:2000)
+newdata$owF2<-predict(ow2,newdata)
+newdata$owF2.se<-predict(ow2,newdata,se.fit=T)$se.fit
+newdata$uwF2<-predict(uw2,newdata)
+newdata$uwF2.se<-predict(uw2,newdata,se.fit=T)$se.fit
+newdata$owF2roc<-ROC(newdata$owF2)
+newdata$owF2roc.se<-ROC(newdata$owF2.se)
+newdata$uwF2roc<-ROC(newdata$uwF2)
+newdata$uwF2roc.se<-ROC(newdata$uwF2.se)
+
+ggplot(newdata)+geom_line(aes(x=YOB,y=uwF2))+geom_line(aes(x=YOB,y=uwF2+1.96*uwF2.se))+geom_line(aes(x=YOB,y=uwF2-1.96*uwF2.se))+geom_line(aes(x=YOB,y=uwF2),size=2,color='black')+geom_line(aes(x=YOB,y=owF2),size=2,color='gray70')+geom_line(aes(x=YOB,y=owF2+1.96*owF2.se))+geom_line(aes(x=YOB,y=owF2-1.96*owF2.se))+theme_bw()+xlab('Year')+ylab('F2/S(F2)')+theme(panel.border=element_rect(color='black',size=1.5))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owuwparallel.pdf',width=2.25,height=2)
+ggplot(newdata)+geom_line(aes(x=YOB,y=uwF2roc),size=2,color='black')+geom_line(aes(x=YOB,y=owF2roc),size=2,color='grey70')+theme_bw()+geom_hline(yintercept=0,linetype='dotted')+xlab('Year')+ylab('% change in F2')+theme(panel.border=element_rect(color='black',size=1.5))+scale_y_continuous(breaks=c(-.01,0,.01))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owuwparallelROC.pdf',width=2.35,height=2)
+
+#interspeaker correlation
+
+a<-ggplot_build(ggplot()+stat_summary(data=ow[ow$frame==10&ow$JF!='owL',],aes(y=F2.norm,x=YOB,group=Pseudo)))$data[1][[1]]
+b<-ggplot_build(ggplot()+stat_summary(data=uw[uw$frame==10&uw$JF!='uwL'&uw$JF!='Juw',],aes(y=F2.norm,x=YOB,group=Pseudo),color='blue'))$data[1][[1]]
+a<-a[,1:5]
+b<-b[,1:5]
+names(a)<-c('Year','Pseudo','owf2','owf2min','owf2max')
+names(b)<-c('Year','Pseudo','uwf2','uwf2min','uwf2max')
+a<-cbind(a,b[,3:5])
+
+plot<-ggplot_build(ggplot(a[a$Pseudo!=16&a$Pseudo!=4,])+geom_point(aes(x=owf2,y=uwf2)))
+plotdat<-plot$data[[1]]
+mod<-lm(x~y,data=plotdat)
+line<-predict(mod)
+se<-predict(mod,se=T)$se.fit
+line<-cbind(line,se)
+line<-as.data.frame(line)
+line$upper<-line$line+(1.96*line$se)
+line$lower<-line$line-(1.96*line$se)
+a<-a[a$Pseudo!=16&a$Pseudo!=4,]
+a$parallel<-as.factor(a$owf2>=a$uwf2)
+levels(a$parallel)<-c('/o/\u2265/u/','/o/</u/')
+a<-cbind(a,line)
+p<-ggplot(a)+geom_point(aes(x=owf2,y=uwf2,shape=parallel),size=2,alpha=0.75)+scale_shape_discrete(solid=F)+geom_line(aes(y=uwf2,x=line))+geom_line(aes(y=uwf2,x=upper),linetype='dotted')+geom_line(aes(y=uwf2,x=lower),linetype='dotted')+theme_bw()+scale_x_reverse()+theme(legend.title=element_blank(),legend.position='left',panel.border=element_rect(size=1.5,color='black'))+xlab('/o/ F2/S(F2)')+ylab('/u/ F2/S(F2)')
+ggdraw(switch_axis_position(p, axis = 'y'))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owuwcorrelation.pdf',height=3,width=4,device=cairo_pdf)
+
+#the role of vowel dynamics
+ow$Mod<-cut(ow$dim3,2)
+ow$Dec<-cut(ow$YOB,3)
+uw$Mod<-cut(uw$dim3,2)
+uw$Dec<-cut(uw$YOB,3)
+ow4<- bam(F2.norm ~ JF + Dec+Mod+s(frame, by=JF)+s(frame,by=Dec)+s(frame,by=Mod), data=ow)
+newdata<-expand.grid(frame=seq(1,20,by=.1),JF=levels(ow$JF),Mod=levels(ow$Mod),Dec=levels(ow$Dec))
+newdata$F2<-predict(ow4,newdata)
+newdata$F2.se<-predict(ow4,newdata,se.fit=T)$se.fit
+newdata$Dec<-cut(newdata$YOB,3)
+levels(newdata$Mod)<-c('Lower mobility','Higher mobility')
+levels(newdata$Dec)<-c('1935-1960','1961-1980','1981-2000')
+ggplot()+geom_line(data=newdata[newdata$JF=='ow',],aes(x=frame,y=F2,color=Mod,group=Mod,stat='smooth',method='loess',linetype=Mod))+geom_ribbon(data=newdata[newdata$JF=='ow',],aes(x=frame,ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se,color=Mod),alpha=.001)+facet_wrap(~Dec)+theme_bw()+scale_color_grey(start=0.5,end=0.1)+theme(legend.title=element_blank(),panel.border=element_rect(color='black',size=1.5),strip.background=element_rect(color='black',fill='white',size=1.5))+xlab('Measurement point')+ylab('F2/S(F2)')+guides(color = guide_legend(reverse=TRUE),linetype = guide_legend(reverse=TRUE))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owdynamicsclass.pdf',height=3,width=7)
+
+ggplot(ow,aes(x=frame,y=F2.norm,color=Mod))+geom_line(stat='smooth',method='loess')+facet_wrap(~Dec)
+ggplot(uw,aes(x=frame,y=F2.norm,color=Mod))+geom_line(stat='smooth',method='loess')+facet_wrap(~Dec)
 
 
 
 
+
+
+
+
+#Want to plot speaker means
+owmod_Mod_smooth_Parents<- bam(F2.norm ~ JF + YOB+Mod+s(frame, by=JF)+te(frame,YOB)+s(frame,by=Mod)+s(frame,Pseudo,bs='fs'), data=ow)
+owmod_Mod_smooth_Parentsf1<- bam(F1.norm ~ JF + YOB+Mod+s(frame, by=JF)+te(frame,YOB)+s(frame,by=Mod)+s(frame,Pseudo,bs='fs'), data=ow)
+owmod_Mod_smooth_Parentseuc<- bam(Eucdist ~ JF + YOB+Mod+s(frame, by=JF)+te(frame,YOB)+s(frame,by=Mod)+s(frame,Pseudo,bs='fs'), data=ow)
+
+newdata<-owmod_Mod_smooth_Parents$model
+newdata$Dec<-cut(newdata$YOB,3)
+levels(newdata$Dec)<-c('O','M','Y')
+newdata$F2.norm<-predict(owmod_Mod_smooth_Parents)
+newdata$F2.se<-predict(owmod_Mod_smooth_Parents,se.fit=T)$se.fit
+newdata$F1.norm<-predict(owmod_Mod_smooth_Parentsf1)
+newdata$F1.se<-predict(owmod_Mod_smooth_Parentsf1,se.fit=T)$se.fit
+newdata$Euc<-predict(owmod_Mod_smooth_Parentseuc)
+newdata$Euc<-predict(owmod_Mod_smooth_Parentseuc,se.fit=T)$se.fit
+ggplot(newdata[newdata$Pseudo!='DA_M_1991_5'&newdata$frame==10&newdata$JF=='ow'&newdata$F2.norm>0.6,],aes(y=Eucdist,x=F2.norm,group=Pseudo))+geom_text(aes(label=Dec))
+#Add trajectory means
+data<-newdata
+eucdist<-function(Pseudo,JF){
+	#indexing here is a hack -- duplicate values
+	x1<-data[data$Pseudo==Pseudo&data$JF==JF&data$frame==2,]$F1.norm[1]
+	y1<-data[data$Pseudo==Pseudo&data$JF==JF&data$frame==2,]$F2.norm[1]
+	x2<-data[data$Pseudo==Pseudo&data$JF==JF&data$frame==18,]$F1.norm[1]
+	y2<-data[data$Pseudo==Pseudo&data$JF==JF&data$frame==18,]$F2.norm[1]
+	return(sqrt((x1-x2)^2+(y1-y2)^2))
+}
+nd<-newdata
+newdata$Eucdist<-mapply('eucdist',Pseudo=nd$Pseudo,JF=nd$JF)
+plotme<-newdata[newdata$Pseudo!='DA_M_1991_5'&newdata$frame==10&newdata$JF=='ow'&newdata$F2.norm>0.6,]
+save(newdata,file='CLS_eucdist.R')
+#Add trajectory means
+library('fpc')
+library('stats')
+library(data.table)
+library(dplyr)
+library(plyr)
+library(TTR)
+
+
+p<-ggplot(plotme,aes(y=Eucdist,x=F2.norm,group=Pseudo,label=Dec))
++geom_text(aes(label=Dec),color='black')+geom_polygon(data=hulls,group=-1)
+pdat<-ggplot_build(p)$data[[1]]
+pdat<-pdat[!duplicated(pdat), ]
+x<-dbscan(cbind(pdat$x,pdat$y),0.086)
+dt <- data.table(pdat,Cluster=as.factor(x$cluster), key = "Cluster")
+find_hull <- function(df) df[chull(df$x, df$y), ]
+hulls <- ddply(dt, "Cluster", find_hull)
+
+
+ggplot(dt,aes(x=x,y=y,linetype=Cluster))+geom_text(aes(label=label))+geom_polygon(data=hulls,color='black',linetype='dotted',fill=NA,aes(group=Cluster))+theme_bw()+scale_fill_grey()+scale_x_reverse()+theme(panel.border=element_rect(size=1.5,color='black'))+xlab('F2/S(F2)')+ylab('Normalized Euclidean distance')+theme(legend.position='NULL')+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/ofrontingdip.pdf',width=3,height=3)
+
+ggplot(ow[ow$frame==15,],aes(x=YOB,y=F1.norm))+stat_summary()+geom_smooth(method='lm')
 
 
