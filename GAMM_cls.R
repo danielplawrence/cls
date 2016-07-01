@@ -777,14 +777,15 @@ uw$JF<-factor(uw$JF)
 ow$JF<-factor(ow$JF)
 ow2<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),data=ow[ow$Pre_manner!='nasal'&ow$Fol_manner!='nasal',],method='ML',verbose=T)
 
-newdata<-expand.grid(frame=seq(1,20,by=.1),YOB=1935:2000,JF=levels(ow$JF))
+newdata<-expand.grid(frame=seq(1,20,by=.1),YOB=1935:2000,JF=levels(ow$JF),Dec=levels(ow$Dec),Mob=levels(ow$Mob))
 newdata$F2<-predict(ow2,newdata)
 newdata$F2.se<-predict(ow2,newdata,se.fit=T)$se.fit
 newdata<-newdata[newdata$JF!='owL',]
 newdata$JF<-factor(newdata$JF)
 newdata$JF<-factor(newdata$JF,levels=levels(newdata$JF)[c(3,1,2)])
 names(newdata)[3]<-'Environment'
-ggplot(newdata[newdata$frame==15,],aes(x=YOB,y=F2,linetype=Environment))+geom_ribbon(aes(ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se),color='black',alpha=.001)+theme(panel.border=element_rect(size=1.5,color='black'))+geom_line(aes(linetype=Environment))+theme_bw()+ylab('F2/S(F2)')+xlab('Year')+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+ggtitle('/o/')+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owphoneticconditioning.pdf',width=3,height=2)
+ggplot(newdata[newdata$frame==15,],aes(x=YOB,y=F2,linetype=Environment))+geom_ribbon(aes(ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se),color='black',alpha=.001)+theme(panel.border=element_rect(size=1.5,color='black'))+geom_line(aes(linetype=Environment))+theme_bw()+ylab('F2/S(F2)')+xlab('Year')+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+ggtitle('/o/')
++ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owphoneticconditioning.pdf',width=3,height=2)
 
 
 uw2<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),data=uw,method='ML')
@@ -845,3 +846,24 @@ head(a)
 melt(a)
 head(a)
 ggplot(a,aes(x=F2,y=Euc))+geom_point()
+
+
+
+#Which are the best models?
+ow$Dec<-cut(ow$YOB,3)
+ow$Mob<-cut(ow$dim3,2)
+ow$York<-cut(ow$dim1,2)
+ow$SES<-cut(ow$dim1,2)
+#base
+ow2<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),method='ML',verbose=T,data=ow)
+#Mobility
+ow3<- gam(F2.norm ~ JF+YOB+Mob+te(frame,YOB,by=JF,k=4)+te(frame,by=Mob)+s(frame,JF,by=Pseudo,bs='re'),method='ML',verbose=T,data=ow)
+#Mobility plus York
+ow4<- gam(F2.norm ~ JF+YOB+Mob+York+te(frame,YOB,by=JF,k=4)+te(frame,by=Mob)+te(frame,by=York)+s(frame,JF,by=Pseudo,bs='re'),method='ML',verbose=T,data=ow)
+#Mobility interactive
+compareML(ow3,ow4)
+
+
+
+
+
