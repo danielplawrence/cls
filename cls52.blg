@@ -5,42 +5,42 @@ The style file: clslike.bst
 Database file #1: cls.bib
 You've used 22 entries,
             2577 wiz_defined-function locations,
-            693 strings with 8302 characters,
-and the built_in function-call counts, 8891 in all, are:
-= -- 998
-> -- 228
+            698 strings with 8436 characters,
+and the built_in function-call counts, 9123 in all, are:
+= -- 1022
+> -- 238
 < -- 16
-+ -- 116
-- -- 98
-* -- 706
-:= -- 1498
-add.period$ -- 86
++ -- 119
+- -- 101
+* -- 713
+:= -- 1535
+add.period$ -- 88
 call.type$ -- 22
-change.case$ -- 177
+change.case$ -- 176
 chr.to.int$ -- 22
 cite$ -- 22
-duplicate$ -- 419
-empty$ -- 602
-format.name$ -- 128
-if$ -- 1732
+duplicate$ -- 436
+empty$ -- 639
+format.name$ -- 131
+if$ -- 1799
 int.to.chr$ -- 1
 int.to.str$ -- 0
-missing$ -- 20
+missing$ -- 21
 newline$ -- 133
-num.names$ -- 66
-pop$ -- 108
+num.names$ -- 68
+pop$ -- 121
 preamble$ -- 1
 purify$ -- 158
 quote$ -- 0
-skip$ -- 282
+skip$ -- 283
 stack$ -- 0
 substring$ -- 703
 swap$ -- 57
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 130
+type$ -- 128
 warning$ -- 0
-while$ -- 78
+while$ -- 80
 width$ -- 0
-write$ -- 284
+write$ -- 290
