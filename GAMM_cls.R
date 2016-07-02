@@ -572,9 +572,12 @@ newdata$owF2roc.se<-ROC(newdata$owF2.se)
 newdata$uwF2roc<-ROC(newdata$uwF2)
 newdata$uwF2roc.se<-ROC(newdata$uwF2.se)
 
-ggplot(newdata)+geom_line(aes(x=YOB,y=uwF2))+geom_line(aes(x=YOB,y=uwF2+1.96*uwF2.se))+geom_line(aes(x=YOB,y=uwF2-1.96*uwF2.se))+geom_line(aes(x=YOB,y=uwF2),size=2,color='black')+geom_line(aes(x=YOB,y=owF2),size=2,color='gray70')+geom_line(aes(x=YOB,y=owF2+1.96*owF2.se))+geom_line(aes(x=YOB,y=owF2-1.96*owF2.se))+theme_bw()+xlab('Year')+ylab('F2/S(F2)')+theme(panel.border=element_rect(color='black',size=1.5))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owuwparallel.pdf',width=2.25,height=2)
-ggplot(newdata)+geom_line(aes(x=YOB,y=uwF2roc),size=2,color='black')+geom_line(aes(x=YOB,y=owF2roc),size=2,color='grey70')+theme_bw()+geom_hline(yintercept=0,linetype='dotted')+xlab('Year')+ylab('% change in F2')+theme(panel.border=element_rect(color='black',size=1.5))+scale_y_continuous(breaks=c(-.01,0,.01))+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owuwparallelROC.pdf',width=2.35,height=2)
+ggplot(newdata)+geom_line(aes(x=YOB,y=uwF2))+geom_line(aes(x=YOB,y=uwF2+1.96*uwF2.se))+geom_line(aes(x=YOB,y=uwF2-1.96*uwF2.se))+geom_line(aes(x=YOB,y=uwF2),size=2,color='black')+geom_line(aes(x=YOB,y=owF2),size=2,color='gray70')+geom_line(aes(x=YOB,y=owF2+1.96*owF2.se))+geom_line(aes(x=YOB,y=owF2-1.96*owF2.se))+theme_bw()+xlab('Year')+ylab('F2/S(F2)')+theme(panel.border=element_rect(color='black',size=1.5))+geom_vline(xintercept=1954,linetype='dotdash')+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owuwparallel.pdf',width=2.25,height=2)
+ggplot(newdata)+geom_line(aes(x=YOB,y=uwF2roc),size=2,color='black')+geom_line(aes(x=YOB,y=owF2roc),size=2,color='grey70')+theme_bw()+geom_hline(yintercept=0,linetype='dotted')+xlab('Year')+ylab('% change in F2')+theme(panel.border=element_rect(color='black',size=1.5))+scale_y_continuous(breaks=c(-.01,0,.01))+geom_vline(xintercept=1954,linetype='dotted')+geom_vline(xintercept=1954,linetype='dotdash')+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/owuwparallelROC.pdf',width=2.35,height=2)
 
+#Exact point
+newdata[newdata$owF2roc>0,]$YOB
+newdata[newdata$uwF2>=newdata$owF2,]$YOB
 #interspeaker correlation
 
 a<-ggplot_build(ggplot()+stat_summary(data=ow[ow$frame==10&ow$JF!='owL',],aes(y=F2.norm,x=YOB,group=Pseudo)))$data[1][[1]]
@@ -777,7 +780,7 @@ uw$JF<-factor(uw$JF)
 ow$JF<-factor(ow$JF)
 ow2<- gam(F2.norm ~ JF+YOB+te(frame,YOB,by=JF,k=4),data=ow[ow$Pre_manner!='nasal'&ow$Fol_manner!='nasal',],method='ML',verbose=T)
 
-newdata<-expand.grid(frame=seq(1,20,by=.1),YOB=1935:2000,JF=levels(ow$JF),Dec=levels(ow$Dec),Mob=levels(ow$Mob))
+newdata<-expand.grid(frame=seq(1,20,by=.1),YOB=1935:2000,JF=levels(factor(ow[ow$JF!='owN',]$JF)))
 newdata$F2<-predict(ow2,newdata)
 newdata$F2.se<-predict(ow2,newdata,se.fit=T)$se.fit
 newdata<-newdata[newdata$JF!='owL',]
@@ -808,7 +811,7 @@ geom_ribbon(aes(ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se),color='black',alpha=.001)
 
 ow6<-newdata[newdata$frame==10,]
 ow6$ROC<-ROC(ow6$F2)
-ggplot(ow6[ow6$Environment!='owN',],aes(x=YOB,y=ROC,linetype=Environment))+geom_line()+ylim(c(-0.02,0.02))
+ggplot(ow6[ow6$Environment!='owN',],aes(x=YOB,y=ROC))+geom_line()+ylim(c(-0.02,0.02))
 geom_ribbon(aes(ymax=F2+1.96*F2.se,ymin=F2-1.96*F2.se),color='black',alpha=.001)+geom_line(aes(linetype=Environment))+theme_bw()+ylab('F2/S(F2)')+xlab('Year')+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+ggtitle('/u/')
 
 
@@ -823,14 +826,35 @@ names(a)<-c('Year','Pseudo','F2','owf2min','owf2max')
 names(b)<-c('Year','Pseudo','F2','owf2min','owf2max')
 a$Vowel<-'/o/'
 b$Vowel<-'/u/'
+a$dist<-abs(b$F2-a$F2)
 a<-rbind(a,b)
 a<-a[a$Pseudo!=16&a$Pseudo!=4,]
 head(a)
 melt(a)
 
 
-v<-ggplot(a,aes(x=Year,y=F2))+geom_point(size=2,aes(shape=Vowel))+geom_line(aes(group=Pseudo),color='black',linetype='dotted',alpha=0.5)+theme_bw()+scale_shape_manual(values=c(16,1))+guides(shape = guide_legend(reverse = TRUE))+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+ylab('F2/S(F2)')+ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/resistance1.pdf',width=5,height=4)
+v<-ggplot(a,aes(x=Year,y=F2))+geom_point(size=2,aes(shape=Vowel))+geom_line(aes(group=Pseudo),color='black',linetype='dotted',alpha=0.5)+theme_bw()+scale_shape_manual(values=c(16,1))+guides(shape = guide_legend(reverse = TRUE))+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+geom_vline(xintercept=1954,linetype='dotdash')+ylab('F2/S(F2)')
++ggsave('/Users/pplsuser/Desktop/CLS52AuthorKit/resistance1.pdf',width=5,height=4)
 	+geom_segment(aes(x=uw2,y=owf2,xend=uwf2,yend=owf2,group=Pseudo))
+
+v<-ggplot(a,aes(x=Year,y=F2))+geom_point()+theme_bw()+scale_shape_manual(values=c(16,1))+guides(shape = guide_legend(reverse = TRUE))+theme(legend.title=element_blank(),panel.border=element_rect(size=1.5,color='black'))+geom_vline(xintercept=1954,linetype='dotdash')+ylab('F2/S(F2)')
+ow2<- gam(F2.norm ~ YOB+te(YOB,k=4),data=ow[ow$Pre_manner!='nasal'&ow$Fol_manner!='nasal'&ow$frame==10,],method='ML',verbose=T)
+#Sampling from the posterior
+beta <- coef(ow2)
+Sigma <- vcov(ow2)
+posterior <- mvrnorm(n = 1000, mu = beta, Sigma = Sigma)
+
+pred <- data.frame(YOB = seq(1935,2000))
+  model_matrix <- predict(ow2, newdata = pred, type = 'lpmatrix')
+plot(model_matrix %*% posterior[1,])
+
+mult_it <- function(x, y){
+  x %*% y
+}
+
+sims <- apply(posterior, MARGIN= 1, FUN = mult_it, x = model_matrix)
+
+matplot(pred$YOB, sims, type = 'l', col = 'black')
 
 
 a<-ggplot_build(ggplot(uw[uw$frame==10,],aes(x=YOB,y=Eucdist,group=Pseudo))+stat_summary())$data[1][[1]]
@@ -863,7 +887,8 @@ ow4<- gam(F2.norm ~ JF+YOB+Mob+York+te(frame,YOB,by=JF,k=4)+te(frame,by=Mob)+te(
 #Mobility interactive
 compareML(ow3,ow4)
 
-
-
+ggplot(ow[ow$frame==10,],aes(x=Dec,y=Eucdist,group=Pseudo,color=Gender))+stat_summary()+facet_wrap(~Mob)
+head(a)
+table(a$PANEL,a$x)
 
 

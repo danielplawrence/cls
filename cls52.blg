@@ -3,49 +3,44 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: cls52.aux
 The style file: clslike.bst
 Database file #1: cls.bib
-Repeated entry---line 96 of file cls.bib
- : @article{jansen2010high
- :                        ,
-I'm skipping whatever remains of this entry
 You've used 22 entries,
             2577 wiz_defined-function locations,
-            694 strings with 8173 characters,
-and the built_in function-call counts, 8840 in all, are:
-= -- 991
+            693 strings with 8302 characters,
+and the built_in function-call counts, 8891 in all, are:
+= -- 998
 > -- 228
 < -- 16
-+ -- 117
++ -- 116
 - -- 98
-* -- 710
-:= -- 1495
+* -- 706
+:= -- 1498
 add.period$ -- 86
 call.type$ -- 22
 change.case$ -- 177
-chr.to.int$ -- 21
+chr.to.int$ -- 22
 cite$ -- 22
-duplicate$ -- 413
-empty$ -- 599
+duplicate$ -- 419
+empty$ -- 602
 format.name$ -- 128
-if$ -- 1713
-int.to.chr$ -- 2
+if$ -- 1732
+int.to.chr$ -- 1
 int.to.str$ -- 0
 missing$ -- 20
 newline$ -- 133
 num.names$ -- 66
-pop$ -- 106
+pop$ -- 108
 preamble$ -- 1
 purify$ -- 158
 quote$ -- 0
-skip$ -- 272
+skip$ -- 282
 stack$ -- 0
-substring$ -- 704
-swap$ -- 51
+substring$ -- 703
+swap$ -- 57
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 130
 warning$ -- 0
-while$ -- 77
+while$ -- 78
 width$ -- 0
 write$ -- 284
-(There was 1 error message)
